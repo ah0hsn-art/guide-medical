@@ -51,8 +51,8 @@ html{scroll-behavior:smooth}
   .cart-btn{display:none!important}
 
   /* Bigger buttons on mobile */
-  .btn-add{padding:12px 16px;font-size:14px;font-weight:500;width:100%;margin-top:8px}
-  .book-card{gap:16px}
+  .btn-add{padding:8px 10px;font-size:12px;font-weight:500;width:100%;margin-top:8px}
+  .book-card{gap:8px}.books-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px}
   .year-tab-btn{padding:12px 16px;font-size:13px}
   .hero-actions .btn-primary,.hero-actions .btn-secondary{padding:16px 24px;font-size:15px}
 }
@@ -224,7 +224,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .filter-tab{padding:7px 14px;border:1px solid var(--rule);border-radius:20px;font-size:12px;color:var(--ink-muted);cursor:pointer;background:transparent;transition:all .2s}
 .filter-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 .filter-tab:hover:not(.active){border-color:var(--ink-light);color:var(--ink)}
-.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:28px}
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
 .book-card{display:flex;flex-direction:column;transition:transform .3s ease;cursor:pointer}
 .book-card:hover{transform:translateY(-5px)}
 .book-cover{width:100%;aspect-ratio:3/4;border-radius:3px 8px 8px 3px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:6px 10px 28px rgba(14,17,23,.14),inset -4px 0 0 rgba(0,0,0,.1);margin-bottom:14px}
@@ -2036,8 +2036,16 @@ function deleteBook(bookId) {
 
 // Load saved book overrides on startup
 function loadBookOverrides() {
-  // Clear old book overrides so new books from code always show
-  localStorage.removeItem('gm_books_override');
+  const saved = localStorage.getItem('gm_books_override');
+  if(saved) {
+    try {
+      const savedBooks = JSON.parse(saved);
+      if(savedBooks && savedBooks.length) {
+        BOOKS.length = 0;
+        savedBooks.forEach(b => BOOKS.push(b));
+      }
+    } catch(e) { localStorage.removeItem('gm_books_override'); }
+  }
 }
 
 // ─── VILLES ───
@@ -2662,6 +2670,17 @@ if(_savedSession) {
   } catch(e) { currentUser = null; }
 }
 
+// Restore admin session
+if(localStorage.getItem('gm_admin_session') === '1') {
+  adminLoggedIn = true;
+  document.addEventListener('DOMContentLoaded', () => {
+    showPage('admin');
+    document.getElementById('admin-login-wrap').classList.add('hidden');
+    document.getElementById('admin-dashboard').classList.remove('hidden');
+    loadAdminDashboard();
+  });
+}
+
 initLogos();
 updateNav();
 updateStatsBar();
@@ -2754,6 +2773,7 @@ function checkAdminPw() {
 
 function logoutAdmin() {
   adminLoggedIn = false;
+  localStorage.removeItem('gm_admin_session');
   document.getElementById('admin-login-wrap').classList.remove('hidden');
   document.getElementById('admin-dashboard').classList.add('hidden');
   document.getElementById('admin-pw-input').value = '';
